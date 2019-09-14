@@ -327,7 +327,7 @@ void CK_InitGame()
 	CK_Misc_SetupFunctions();
 	ck_currentEpisode->setupFunctions();
 	CK_VAR_Startup();
-	CK_VAR_LoadVars("ACTION.EXT");
+	CK_VAR_LoadVars(CA_DataFilenames[CA_DataFile_Action]);
 
 	// Setup the screen
 	VL_InitScreen();

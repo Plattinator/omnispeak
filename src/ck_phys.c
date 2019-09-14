@@ -766,7 +766,6 @@ void CK_PhysPushXY(CK_object *passenger, CK_object *platform, bool squish)
 
 void CK_SetAction(CK_object *obj, CK_action *act)
 {
-	CK_Cross_LogMessage(CK_LOG_MSG_NORMAL, "Setting current action of object type %d\n", obj->type);
 	obj->currentAction = act;
 
 	if (act->chunkRight && obj->xDirection > 0)
