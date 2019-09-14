@@ -56,6 +56,32 @@ bool CA_WriteFile(const char *filename, void *offset, int bufLength);
 bool CA_LoadFile(const char *filename, mm_ptr_t *ptr, int *memsize);
 int CAL_RLEWCompress(void *src, int expLength, void *dest, uint16_t rletag);
 void CAL_RLEWExpand(void *src, void *dest, int expLength, uint16_t rletag);
+const char *CA_GetFilename(const char *path);
+void CA_SetDataFilenames(const char *extension);
+
+typedef enum CA_DataFile
+{
+	// User-provided files
+	CA_DataFile_Egagraph,
+	CA_DataFile_Gamemaps,
+	CA_DataFile_Audio,
+	// Omnispeak-provided files
+	CA_DataFile_Egahead,
+	CA_DataFile_Egadict,
+	CA_DataFile_Gfxinfoe,
+	CA_DataFile_Maphead,
+	CA_DataFile_Tileinfo,
+	CA_DataFile_Audiodct,
+	CA_DataFile_Audiohhd,
+	CA_DataFile_Audinfoe,
+	CA_DataFile_Action,
+	CA_DataFile_Max
+} CA_DataFile;
+
+#define CA_DATA_FILENAME_MAX_LENGTH 16
+
+extern char CA_DataFilenames[CA_DataFile_Max][CA_DATA_FILENAME_MAX_LENGTH];
+extern const char *CA_DataFileTypeNames[CA_DataFile_Max];
 
 // -- Graphics --
 

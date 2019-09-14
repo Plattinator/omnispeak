@@ -59,37 +59,19 @@ CK_EpisodeDef ck5_episode = {
 // Check if all the game files are present.
 bool CK5_IsPresent()
 {
-	// User-provided files
-	if (!CA_IsFilePresent("EGAGRAPH.CK5"))
-		return false;
-	if (!CA_IsFilePresent("GAMEMAPS.CK5"))
-		return false;
-	if (!CA_IsFilePresent("AUDIO.CK5"))
-		return false;
+	CA_SetDataFilenames(ck5_episode.ext);
+	for (int i = 0; i < CA_DataFile_Max; ++i)
+	{
+		// Map header file may include the tile info
+		if (i == CA_DataFile_Tileinfo)
+			continue;
 
-	// Omnispeak-provided files
-	if (!CA_IsFilePresent("EGAHEAD.CK5"))
-		return false;
-	if (!CA_IsFilePresent("EGADICT.CK5"))
-		return false;
-	if (!CA_IsFilePresent("GFXINFOE.CK5"))
-		return false;
-	if (!CA_IsFilePresent("MAPHEAD.CK5"))
-		return false;
-	// Map header file may include the tile info
-	//if (!CA_IsFilePresent("TILEINFO.CK5"))
-	//	return false;
-	if (!CA_IsFilePresent("AUDIODCT.CK5"))
-		return false;
-	if (!CA_IsFilePresent("AUDIOHHD.CK5"))
-		return false;
-	if (!CA_IsFilePresent("AUDINFOE.CK5"))
-		return false;
-
-	if (!CA_IsFilePresent("ACTION.CK5"))
-		return false;
-
-	// We clearly have all of the required files.
+		if (!CA_IsFilePresent(CA_DataFilenames[i]))
+		{
+			return false;
+		}
+		CAL_AdjustFilenameCase(CA_DataFilenames[i]);
+	}
 	return true;
 }
 

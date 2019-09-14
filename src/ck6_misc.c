@@ -109,45 +109,26 @@ void CK6_SetupFunctions()
 // Check if all the game files are present.
 bool CK6_IsPresent()
 {
-	// User-provided files
-	if (!CA_IsFilePresent("EGAGRAPH.CK6"))
-		return false;
-	if (!CA_IsFilePresent("GAMEMAPS.CK6"))
-		return false;
-	if (!CA_IsFilePresent("AUDIO.CK6"))
-		return false;
+	CA_SetDataFilenames(ck6v14e_episode.ext);
+	for (int i = 0; i < CA_DataFile_Max; ++i)
+	{
+		// Map header file may include the tile info
+		if (i == CA_DataFile_Tileinfo)
+			continue;
 
-	char egaGraphName[] = "EGAGRAPH.CK6";
-	CAL_AdjustFilenameCase(egaGraphName);
-	size_t egaGraphSize = CA_GetFileSize(egaGraphName);
+		if (!CA_IsFilePresent(CA_DataFilenames[i]))
+		{
+			return false;
+		}
+		CAL_AdjustFilenameCase(CA_DataFilenames[i]);
+	}
+
+	size_t egaGraphSize = CA_GetFileSize(CA_DataFilenames[CA_DataFile_Egagraph]);
 	if (egaGraphSize == 464662)
 		ck6_episode = &ck6v15e_episode;
 	else
 		ck6_episode = &ck6v14e_episode;
 
-	// Omnispeak-provided files
-	if (!CA_IsFilePresent("EGAHEAD.CK6"))
-		return false;
-	if (!CA_IsFilePresent("EGADICT.CK6"))
-		return false;
-	if (!CA_IsFilePresent("GFXINFOE.CK6"))
-		return false;
-	if (!CA_IsFilePresent("MAPHEAD.CK6"))
-		return false;
-	// Map header file may include the tile info
-	//if (!CA_IsFilePresent("TILEINFO.CK6"))
-	//	return false;
-	if (!CA_IsFilePresent("AUDIODCT.CK6"))
-		return false;
-	if (!CA_IsFilePresent("AUDIOHHD.CK6"))
-		return false;
-	if (!CA_IsFilePresent("AUDINFOE.CK6"))
-		return false;
-
-	if (!CA_IsFilePresent("ACTION.CK6"))
-		return false;
-
-	// We clearly have all of the required files.
 	return true;
 }
 

@@ -54,6 +54,7 @@ void CK_Cross_puts(const char *str);
 int CK_Cross_toupper(int c);
 // A bit less standard, but still done assuming English locale
 int CK_Cross_strcasecmp(const char *s1, const char *s2);
+int CK_Cross_strncasecmp(const char *s1, const char *s2, size_t n);
 
 // Used for reading buffers of a specific type, assuming Little-Endian
 // byte order in the file's data itself. It gets converted to native order.

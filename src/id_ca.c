@@ -191,6 +191,44 @@ char *CAL_AdjustExtension(const char *filename)
 	return newname;
 }
 
+const char *CA_GetFilename(const char *path)
+{
+	for (const char *current = path + strlen(path) - 1; current >= path; current--)
+	{
+		if (*current == '/' || *current == '\\')
+		{
+			return current + 1;
+		}
+	}
+	return path;
+}
+
+char CA_DataFilenames[CA_DataFile_Max][CA_DATA_FILENAME_MAX_LENGTH];
+const char *CA_DataFileTypeNames[CA_DataFile_Max] =
+		{
+				"EGAGRAPH.", // CA_DataFile_Egagraph
+				"GAMEMAPS.", // CA_DataFile_Gamemaps
+				"AUDIO.",    // CA_DataFile_Audio
+				"EGAHEAD.",  // CA_DataFile_Egahead
+				"EGADICT.",  // CA_DataFile_Egadict
+				"GFXINFOE.", // CA_DataFile_Gfxinfoe
+				"MAPHEAD.",  // CA_DataFile_Maphead
+				"TILEINFO.", // CA_DataFile_Tileinfo
+				"AUDIODCT.", // CA_DataFile_Audiodct
+				"AUDIOHHD.", // CA_DataFile_Audiohhd
+				"AUDINFOE.", // CA_DataFile_Audinfoe
+				"ACTION."    // CA_DataFile_Action
+		};
+
+void CA_SetDataFilenames(const char *extension)
+{
+	for (int i = 0; i < CA_DataFile_Max; i++)
+	{
+		strcpy(CA_DataFilenames[i], CA_DataFileTypeNames[i]);
+		strcpy(CA_DataFilenames[i] + strlen(CA_DataFileTypeNames[i]), extension);
+	}
+}
+
 bool CA_FarWrite(int handle, uint8_t *source, int length)
 {
 	// TODO: Implement
@@ -251,7 +289,7 @@ bool CA_WriteFile(const char *filename, void *offset, int bufLength)
 
 bool CA_LoadFile(const char *filename, mm_ptr_t *ptr, int *memsize)
 {
-	FILE *f = fopen(CAL_AdjustExtension(filename), "rb");
+	FILE *f = fopen(filename, "rb");
 
 	if (!f)
 		return false;
@@ -551,7 +589,7 @@ void CAL_SetupGrFile()
 	//TODO: Setup cfg mechanism for filenames, chunk data.
 
 	//Load the ?GADICT
-	CA_LoadFile("EGADICT.EXT", (void **)(&ca_gr_huffdict), 0);
+	CA_LoadFile(CA_DataFilenames[CA_DataFile_Egadict], (void **)(&ca_gr_huffdict), 0);
 
 #ifdef CK_CROSS_IS_BIGENDIAN
 	for (int i = 0; i < 256; ++i)
@@ -565,10 +603,10 @@ void CAL_SetupGrFile()
 	//CAL_OptimizeNodes(ca_gr_huffdict);
 
 	//Load the ?GAHEAD
-	CA_LoadFile("EGAHEAD.EXT", &ca_graphStarts, &ca_graphHeadSize);
+	CA_LoadFile(CA_DataFilenames[CA_DataFile_Egahead], &ca_graphStarts, &ca_graphHeadSize);
 
 	// Read chunk type info from GFEINFO?
-	FILE *gfxinfoe = fopen(CAL_AdjustExtension("GFXINFOE.EXT"), "rb");
+	FILE *gfxinfoe = fopen(CA_DataFilenames[CA_DataFile_Gfxinfoe], "rb");
 	size_t gfxinfoeLen = fread(&ca_gfxInfoE, 1, sizeof(ca_gfxinfo), gfxinfoe);
 	fclose(gfxinfoe);
 	if (gfxinfoeLen != sizeof(ca_gfxinfo))
@@ -580,7 +618,7 @@ void CAL_SetupGrFile()
 #endif
 
 	//Load the graphics --- we will keep the file open for the duration of the game.
-	ca_graphHandle = fopen(CAL_AdjustExtension("EGAGRAPH.EXT"), "rb");
+	ca_graphHandle = fopen(CA_DataFilenames[CA_DataFile_Egagraph], "rb");
 
 	// Find the size of the file. Some mods do not have the last entry in the ?GAHEAD,
 	// so we compute it like so.
@@ -859,7 +897,7 @@ extern uint8_t *ti_tileInfo;
 void CAL_SetupMapFile(void)
 {
 	int mapHeadFileSize = 0;
-	CA_LoadFile("MAPHEAD.EXT", (void **)(&ca_MapHead), &mapHeadFileSize);
+	CA_LoadFile(CA_DataFilenames[CA_DataFile_Maphead], (void **)(&ca_MapHead), &mapHeadFileSize);
 #ifdef CK_CROSS_IS_BIGENDIAN
 	ca_MapHead->rleTag = CK_Cross_SwapLE16(ca_MapHead->rleTag);
 	for (int i = 0; i < CA_NUMMAPS; ++i)
@@ -867,10 +905,10 @@ void CAL_SetupMapFile(void)
 		ca_MapHead->headerOffsets[i] = CK_Cross_SwapLE32(ca_MapHead->headerOffsets[i]);
 	}
 #endif
-	ca_GameMaps = fopen(CAL_AdjustExtension("GAMEMAPS.EXT"), "rb");
+	ca_GameMaps = fopen(CA_DataFilenames[CA_DataFile_Gamemaps], "rb");
 	// Try reading TILEINFO.EXT first, otherwise use data from MAPHEAD.EXT
 	ti_tileInfo = NULL;
-	if (!CA_LoadFile("TILEINFO.EXT", (void **)(&ti_tileInfo), 0))
+	if (!CA_LoadFile(CA_DataFilenames[CA_DataFile_Tileinfo], (void **)(&ti_tileInfo), 0))
 	{
 		if (ti_tileInfo) // CA_LoadFile may leave a memory leak
 			MM_FreePtr((void **)&ti_tileInfo);
@@ -890,7 +928,7 @@ int32_t *ca_audiostarts;
 void CAL_SetupAudioFile(void)
 {
 	// Read audio chunk type info from AUDINFOE
-	FILE *audinfoe = fopen(CAL_AdjustExtension("AUDINFOE.EXT"), "rb");
+	FILE *audinfoe = fopen(CA_DataFilenames[CA_DataFile_Audinfoe], "rb");
 	size_t audinfoeLen = fread(&ca_audInfoE, 1, sizeof(ca_audinfo), audinfoe);
 	fclose(audinfoe);
 	if (audinfoeLen != sizeof(ca_audinfo))
@@ -902,7 +940,7 @@ void CAL_SetupAudioFile(void)
 #endif
 
 	//Load the AUDIODCT
-	CA_LoadFile("AUDIODCT.EXT", (void **)(&ca_audiohuffman), 0);
+	CA_LoadFile(CA_DataFilenames[CA_DataFile_Audiodct], (void **)(&ca_audiohuffman), 0);
 
 #ifdef CK_CROSS_IS_BIGENDIAN
 	for (int i = 0; i < 256; ++i)
@@ -916,13 +954,13 @@ void CAL_SetupAudioFile(void)
 	//CAL_OptimizeNodes(ca_audiohuffman);
 
 	//Load the AUDIOHHD
-	CA_LoadFile("AUDIOHHD.EXT", (void **)(&ca_audiostarts), 0);
+	CA_LoadFile(CA_DataFilenames[CA_DataFile_Audiohhd], (void **)(&ca_audiostarts), 0);
 
 	//Load the sound data --- we will keep the file open for the duration of the game.
-	ca_audiohandle = fopen(CAL_AdjustExtension("AUDIO.EXT"), "rb");
+	ca_audiohandle = fopen(CA_DataFilenames[CA_DataFile_Audio], "rb");
 	if (!ca_audiohandle)
 	{
-		Quit("Can't open AUDIO.CK5!");
+		Quit("Can't open AUDIO!");
 	}
 }
 
@@ -1044,11 +1082,11 @@ void CA_Startup(void)
 	// Check for the existence of EGAGRAPH for the Keen Day preview.
 
 	// If the file isn't in the current directory, it might be in the directory the game binary is in.
-	char checkFile[] = "EGAGRAPH.EXT";
+	char *checkFile = CA_DataFilenames[CA_DataFile_Egagraph];
 
 #ifdef WITH_SDL
 #if SDL_VERSION_ATLEAST(2, 0, 1)
-	if (!CAL_AdjustExtension(checkFile))
+	if (!CAL_AdjustFilenameCase(checkFile))
 	{
 		if (chdir(SDL_GetBasePath()))
 			CK_Cross_LogMessage(CK_LOG_MSG_WARNING, "Couldn't change directory to \"%s\"\n", SDL_GetBasePath());
@@ -1056,13 +1094,11 @@ void CA_Startup(void)
 #endif
 #endif
 	// Check EGAGRAPH
-	CA_AssertFileExists(CAL_AdjustExtension(checkFile));
+	CA_AssertFileExists(checkFile);
 
-	char audioCheckFile[] = "AUDIO.EXT";
-	CA_AssertFileExists(CAL_AdjustExtension(audioCheckFile));
+	CA_AssertFileExists(CA_DataFilenames[CA_DataFile_Audio]);
 
-	char gameMapsCheckFile[] = "GAMEMAPS.EXT";
-	CA_AssertFileExists(CAL_AdjustExtension(gameMapsCheckFile));
+	CA_AssertFileExists(CA_DataFilenames[CA_DataFile_Gamemaps]);
 
 	// Load the ?GAGRAPH.EXT file!
 	CAL_SetupGrFile();

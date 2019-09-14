@@ -714,6 +714,35 @@ int main(int argc, char *argv[])
 #endif
 	}
 
+	// Now that we know which episode we're using, pick the data files that will be used.
+	CA_SetDataFilenames(ck_currentEpisode->ext);
+	// This will fix filename case to match what's in the directory.
+	ck_currentEpisode->isPresent();
+
+	// See if any arguments match available override data files.
+	for (int i = 1; i < argc; ++i)
+	{
+		const char *filename = CA_GetFilename(argv[i]);
+		for (int j = 0; j < CA_DataFile_Max; ++j)
+		{
+			if (!CK_Cross_strncasecmp(CA_DataFileTypeNames[j], filename, strlen(CA_DataFileTypeNames[j])))
+			{
+				// This argument starts with a known data file type, see if the file exists.
+				if (CA_IsFilePresent(filename))
+				{
+					strncpy(CA_DataFilenames[j], filename, CA_DATA_FILENAME_MAX_LENGTH);
+					CAL_AdjustFilenameCase(CA_DataFilenames[j]);
+					CK_Cross_LogMessage(CK_LOG_MSG_NORMAL, "Using %s\n", filename);
+				}
+				else
+				{
+					CK_Cross_LogMessage(CK_LOG_MSG_WARNING, "Couldn't find %s.", filename);
+				}
+				continue;
+			}
+		}
+	}
+
 #ifdef CK_ENABLE_PLAYLOOP_DUMPER
 	extern FILE *ck_dumperFile;
 	if (dumperFilename != NULL)
